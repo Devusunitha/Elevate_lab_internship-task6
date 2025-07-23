@@ -1,0 +1,103 @@
+﻿USE CollegeEventDB;
+
+
+1. Scalar Subquery: Get name of the student with the highest ID
+
+
+SELECT name 
+FROM Student 
+WHERE student_id = (SELECT MAX(student_id) FROM Student);
+
+
+2. Subquery in WHERE using IN: Get names of students who are team leaders
+
+
+SELECT name 
+FROM Student
+WHERE student_id IN (SELECT leader_id FROM Team);
+
+
+3. Subquery in WHERE using EXISTS: Get teams with confirmed participation
+
+
+SELECT team_name 
+FROM Team T
+WHERE EXISTS (
+    SELECT 1 
+    FROM Participation P
+    WHERE P.team_id = T.team_id AND P.status = 'Confirmed'
+);
+
+
+4. Correlated Subquery: Get all students who lead more than one team
+
+
+SELECT name 
+FROM Student S
+WHERE (
+    SELECT COUNT(*) 
+    FROM Team T 
+    WHERE T.leader_id = S.student_id
+) > 1;
+
+
+5. Subquery in SELECT: Get student name with count of teams led
+
+
+SELECT name,
+       (SELECT COUNT(*) FROM Team T WHERE T.leader_id = S.student_id) AS teams_led
+FROM Student S;
+
+
+ 6. Subquery in FROM clause (Derived Table): List departments with student counts > 1
+SELECT dept, student_count 
+FROM (
+    SELECT dept, COUNT(*) AS student_count 
+    FROM Student 
+    GROUP BY dept
+) AS dept_summary
+WHERE student_count > 1;
+
+
+7. Nested subquery in WHERE: Get event names where at least one team has won 1st position
+
+
+SELECT event_name 
+FROM Event
+WHERE event_id IN (
+    SELECT event_id 
+    FROM Result 
+    WHERE position = '1st'
+);
+
+
+8. Subquery with NOT IN: List all students who are not team leaders
+
+
+SELECT name 
+FROM Student
+WHERE student_id NOT IN (SELECT leader_id FROM Team);
+
+
+9. Correlated Subquery with comparison: Get events where team count > 1
+
+
+SELECT event_name 
+FROM Event E
+WHERE (
+    SELECT COUNT(*) 
+    FROM Participation P 
+    WHERE P.event_id = E.event_id
+) > 1;
+
+
+10. Derived table join: Get event name and number of results declared
+
+
+SELECT E.event_name, R.result_count
+FROM Event E
+JOIN (
+    SELECT event_id, COUNT(*) AS result_count
+    FROM Result
+    GROUP BY event_id
+) AS R ON E.event_id = R.event_id;
